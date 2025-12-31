@@ -14,22 +14,22 @@ public class LocationController {
 
     private static final Logger log = LoggerFactory.getLogger(LocationController.class);
 
-    private final LocationService locationService;
+    private final LocationService locService;
 
     private final LocationDtoConverter dtoConverter;
 
     public LocationController(
-            LocationService locationService,
+            LocationService locService,
             LocationDtoConverter dtoConverter
     ) {
-        this.locationService = locationService;
+        this.locService = locService;
         this.dtoConverter = dtoConverter;
     }
 
     @GetMapping("/locations")
     public List<LocationDto> getAllLocations() {
         log.info("Get request for getAllLocations");
-        return locationService.getAllLocations()
+        return locService.getAllLocations()
                 .stream()
                 .map(dtoConverter::toDto)
                 .toList();
@@ -41,7 +41,7 @@ public class LocationController {
     ) {
         log.info("Get request for create location: location={}", locationDtoToCreate);
 
-        var createLocation = locationService.createLocation(
+        var createLocation = locService.createLocation(
                 dtoConverter.toDomain(locationDtoToCreate)
         );
 
@@ -55,7 +55,7 @@ public class LocationController {
             @PathVariable("id") Long id
     ) {
         log.info("Get request for delete location: id={}", id);
-        locationService.deleteLocation(id);
+        locService.deleteLocation(id);
 
         return ResponseEntity
                 .status(HttpStatus.NO_CONTENT)
@@ -67,7 +67,7 @@ public class LocationController {
             @PathVariable("id") Long id
     ) {
         log.info("Get request for getLocationById: id={}", id);
-        var foundLocation = locationService.getLocationById(id);
+        var foundLocation = locService.getLocationById(id);
         return dtoConverter.toDto(foundLocation);
     }
 
@@ -79,7 +79,7 @@ public class LocationController {
         log.info("Get request for update location: id={}, locationToUpdate={}",
                 id, locationDtoToUpdate);
 
-        var updatedLocation = locationService.updateLocation(
+        var updatedLocation = locService.updateLocation(
                 id,
                 dtoConverter.toDomain(locationDtoToUpdate)
         );

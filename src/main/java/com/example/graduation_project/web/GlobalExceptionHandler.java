@@ -6,14 +6,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
-@ControllerAdvice
+@RestControllerAdvice
 @ResponseBody
 public class GlobalExceptionHandler {
 
@@ -21,7 +21,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Object> handleIllegalArgument(Exception exception) {
-        log.error("Handle bad request exception", exception);
+        log.warn("Handle bad request exception", exception);
         ErrorMessageResponse messageResponse = new ErrorMessageResponse(
                 "Ошибка валидации запроса",
                 exception.getMessage(),

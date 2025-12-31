@@ -1,15 +1,12 @@
 package com.example.graduation_project.locations;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Null;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record LocationDto(
 
-        @Null
+        @NotNull(message = "ID must be null when creating a new record")
         Long id,
 
         @Size(max = 30)
