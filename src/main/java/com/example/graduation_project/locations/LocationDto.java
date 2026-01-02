@@ -5,8 +5,10 @@ import jakarta.validation.constraints.*;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record LocationDto(
-
-        @NotNull(message = "ID must be null when creating a new record")
+        //Видел корректировку на GitHub, но если ставлю NotNull,
+        //у меня возвращается ответ 200 с сообщением, что id не должен быть null.
+        //Вернул как было
+        @Null
         Long id,
 
         @Size(max = 30)

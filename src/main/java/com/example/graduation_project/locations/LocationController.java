@@ -1,5 +1,8 @@
 package com.example.graduation_project.locations;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@Tag(name = "Locations")
 public class LocationController {
 
     private static final Logger log = LoggerFactory.getLogger(LocationController.class);
@@ -27,6 +31,8 @@ public class LocationController {
     }
 
     @GetMapping("/locations")
+    @Operation(summary = "Получить список всех локаций", description = "Allowed roles=[ADMIN, USER]")
+    @SecurityRequirement(name = "bearerAuth")
     public List<LocationDto> getAllLocations() {
         log.info("Get request for getAllLocations");
         return locService.getAllLocations()
@@ -36,6 +42,8 @@ public class LocationController {
     }
 
     @PostMapping("/locations")
+    @Operation(summary = "Создать новую локацию", description = "Allowed roles=[ADMIN]")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<LocationDto> createLocation(
             @Valid @RequestBody LocationDto locationDtoToCreate
     ) {
@@ -51,6 +59,8 @@ public class LocationController {
     }
 
     @DeleteMapping("/locations/{id}")
+    @Operation(summary = "Удалить локацию по ID", description = "Allowed roles=[ADMIN]")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<Void> deleteLocation(
             @PathVariable("id") Long id
     ) {
@@ -62,7 +72,9 @@ public class LocationController {
                 .build();
     }
 
-    @GetMapping("/locaitons/{id}")
+    @GetMapping("/locations/{id}")
+    @Operation(summary = "Получить локацию по ID", description = "Allowed roles=[ADMIN, USER]")
+    @SecurityRequirement(name = "bearerAuth")
     public LocationDto getLocationById(
             @PathVariable("id") Long id
     ) {
@@ -72,6 +84,8 @@ public class LocationController {
     }
 
     @PutMapping("/locations/{id}")
+    @Operation(summary = "Обновить локацию по ID", description = "Allowed roles=[ADMIN]")
+    @SecurityRequirement(name = "bearerAuth")
     public LocationDto updateLocation(
         @PathVariable("id") Long id,
         @Valid @RequestBody LocationDto locationDtoToUpdate
