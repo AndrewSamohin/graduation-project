@@ -5,10 +5,8 @@ import jakarta.validation.constraints.*;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record LocationDto(
-        //Видел корректировку на GitHub, но если ставлю NotNull,
-        //у меня возвращается ответ 200 с сообщением, что id не должен быть null.
-        //Вернул как было
-        @Null
+
+        @Null(message = "ID cannot be empty")
         Long id,
 
         @Size(max = 30)

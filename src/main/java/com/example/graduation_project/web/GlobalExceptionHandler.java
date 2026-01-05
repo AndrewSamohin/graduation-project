@@ -24,7 +24,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Object> handleIllegalArgument(Exception exception) {
         log.warn("Handle bad request exception", exception);
         ErrorMessageResponse messageResponse = new ErrorMessageResponse(
-                "Ошибка валидации запроса",
+                "Request validation error",
                 exception.getMessage(),
                 LocalDateTime.now()
         );
@@ -38,7 +38,7 @@ public class GlobalExceptionHandler {
     protected ResponseEntity<ErrorMessageResponse> handleGenericException(Exception exception) {
         log.error("Handle generic exception", exception);
         ErrorMessageResponse messageResponse = new ErrorMessageResponse(
-                "Ошибка сервера",
+                "Server error",
                 exception.getMessage(),
                 LocalDateTime.now()
         );
@@ -53,7 +53,7 @@ public class GlobalExceptionHandler {
     ) {
         log.error("Handle found exception", exception);
         ErrorMessageResponse messageResponse = new ErrorMessageResponse(
-                "Сущность не найдена",
+                "Entity not found",
                 exception.getMessage(),
                 LocalDateTime.now()
         );
@@ -68,7 +68,7 @@ public class GlobalExceptionHandler {
         ) {
         log.error("Handle authorization exception", exception);
         ErrorMessageResponse messageResponse = new ErrorMessageResponse(
-                "Доступ запрещен",
+                "Access denied",
                 exception.getMessage(),
                 LocalDateTime.now()
         );
@@ -78,13 +78,17 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    private static String constructMethodArgumentNotValidMessage(
+    private static ResponseEntity<ErrorMessageResponse> constructMethodArgumentNotValidMessage(
             MethodArgumentNotValidException e
     ) {
-        return e.getBindingResult()
-                .getFieldErrors()
-                .stream()
-                .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                .collect(Collectors.joining(", "));
+        ErrorMessageResponse messageResponse = new ErrorMessageResponse(
+                "Empty field",
+                e.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.NO_CONTENT)
+                .body(messageResponse);
     }
 }

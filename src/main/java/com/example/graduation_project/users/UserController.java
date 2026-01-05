@@ -44,25 +44,24 @@ public class UserController {
 
     @PostMapping("/auth")
     @Operation(summary = "Авторизация пользователя и получение JWT")
-    public ResponseEntity<JwtTokenResponse> authenticate(
+    public JwtTokenResponse authenticate(
             @RequestBody @Valid SignInRequest signInRequest
     ) {
         log.info("Get request for sign in: login={}", signInRequest.login());
         var token = authenticationService.authenticateUser(signInRequest);
 
-        return ResponseEntity.status(HttpStatus.OK)
-                             .body(new JwtTokenResponse(token));
+        return new JwtTokenResponse(token);
     }
 
     @GetMapping("/{userId}")
     @Operation(summary = "Получить информацию о пользователе по ID")
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<UserDto> getInfoAboutUser(
+    public UserDto getInfoAboutUser(
             @PathVariable("userId") Long id
     ) {
         log.info("Get request for user: id={}", id);
         var foungUser = userService.findByUserId(id);
-        return ResponseEntity.ok(new UserDto(foungUser.id(), foungUser.login()));
+        return new UserDto(foungUser.id(), foungUser.login());
     }
 
 }

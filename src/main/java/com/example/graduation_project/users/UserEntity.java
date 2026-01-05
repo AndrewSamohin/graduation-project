@@ -11,6 +11,7 @@ public class UserEntity {
 
     private String login;
 
+    @Column(name = "password")
     private String passwordHash;
 
     private String userRole;

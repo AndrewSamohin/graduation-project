@@ -28,6 +28,8 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
     private final UserService userService;
 
+    private static final int BEARER_PREFIX_LENGTH = 7;
+
     public JwtTokenFilter(
             JwtTokenManager jwtTokenManager,
             @Lazy UserService userService) {
@@ -46,7 +48,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-        var jwtToken = authHeader.substring(7);
+        var jwtToken = authHeader.substring(BEARER_PREFIX_LENGTH);
         String loginFromToken;
         try {
             loginFromToken = jwtTokenManager.getLoginFromToken(jwtToken);

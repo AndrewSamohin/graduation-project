@@ -34,8 +34,8 @@ public class DataInitializer implements CommandLineRunner {
                     passwordEncoder.encode("admin"),
                     UserRole.ADMIN.name()
             );
-            userRepository.save(user);
             log.info("Created user '{}' with ADMIN role", user.getLogin());
+            userRepository.save(user);
         } else {
             log.info("User with ADMIN already exists");
         }
@@ -47,8 +47,8 @@ public class DataInitializer implements CommandLineRunner {
                     passwordEncoder.encode("user"),
                     UserRole.USER.name()
             );
-            userRepository.save(user);
             log.info("Created user '{}' with USER role", user.getLogin());
+            userRepository.save(user);
         } else {
             log.info("User with USER already exists");
         }

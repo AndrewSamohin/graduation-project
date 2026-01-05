@@ -47,7 +47,7 @@ public class UserService {
         return mapToDomain(user);
     }
 
-    private static User mapToDomain(UserEntity entity) {
+    private User mapToDomain(UserEntity entity) {
         return new User(
                 entity.getId(),
                 entity.getLogin(),
