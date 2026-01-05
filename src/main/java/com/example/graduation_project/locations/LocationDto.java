@@ -6,7 +6,7 @@ import jakarta.validation.constraints.*;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record LocationDto(
 
-        @NotNull(message = "ID must be null when creating a new record")
+        @Null(message = "ID cannot be empty")
         Long id,
 
         @Size(max = 30)
