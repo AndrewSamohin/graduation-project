@@ -81,14 +81,35 @@ public class GlobalExceptionHandler {
     private static ResponseEntity<ErrorMessageResponse> constructMethodArgumentNotValidMessage(
             MethodArgumentNotValidException e
     ) {
+        String errors = e.getBindingResult()
+                         .getFieldErrors()
+                         .stream()
+                         .map(err -> err.getField() + ": " + err.getDefaultMessage())
+                         .collect(Collectors.joining("; "));
+
         ErrorMessageResponse messageResponse = new ErrorMessageResponse(
-                "Empty field",
+                "Validation failed",
+                errors,
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(messageResponse);
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    private static ResponseEntity<ErrorMessageResponse> handleIllegalState(
+            IllegalStateException e
+    ) {
+        ErrorMessageResponse messageResponse = new ErrorMessageResponse(
+                "Invalid application state",
                 e.getMessage(),
                 LocalDateTime.now()
         );
 
         return ResponseEntity
-                .status(HttpStatus.NO_CONTENT)
+                .status(HttpStatus.CONFLICT)
                 .body(messageResponse);
     }
 }
