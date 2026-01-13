@@ -7,12 +7,12 @@ import java.time.LocalDateTime;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record EventsDto(
-        @Null
+        @Null(message = "Id cannot be equal to 0")
         Long id,
         @NotBlank(message = "Name cannot be empty")
         String name,
 
-        @Min(value  = 5, message ="The number of seats must be at least 10")
+        @Min(value  = 5, message ="The number of seats must be at least 5")
         int maxPlaces,
 
         @Future

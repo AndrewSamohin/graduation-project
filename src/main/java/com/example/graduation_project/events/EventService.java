@@ -5,6 +5,8 @@ import com.example.graduation_project.locations.LocationRepository;
 import com.example.graduation_project.users.User;
 import com.example.graduation_project.users.UserService;
 import jakarta.persistence.EntityNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -16,6 +18,8 @@ import java.util.List;
 
 @Service
 public class EventService {
+
+    private static final Logger log = LoggerFactory.getLogger(EventService.class);
 
     private final EventRepository eventRepository;
 
@@ -38,6 +42,8 @@ public class EventService {
     }
 
     public Events createEvent(Events eventsToCreate) {
+        log.info("Creating an event");
+
         LocationEntity location = locationRepository
                 .findById(eventsToCreate.locationId())
                 .orElseThrow(() ->
@@ -66,6 +72,7 @@ public class EventService {
         );
 
         var savedEntity = eventRepository.save(eventWithStatus);
+        log.info("The event has been created and saved");
 
         return entityConverter.toDomain(savedEntity);
     }
@@ -81,6 +88,7 @@ public class EventService {
 
         if (event.getStatus() == EventStatus.FINISHED
             || event.getStatus() == EventStatus.STARTED) {
+            log.info("Exception: unsuccessful cancellation");
             throw new IllegalStateException(
                     "Only events that have not started can be cancelled"
             );
@@ -90,10 +98,12 @@ public class EventService {
         boolean isAdmin = isAdmin();
 
         if(!isAdmin && !event.getOwnerId().equals(currentUserId)){
+            log.info("Exception: Insufficient rights");
             throw new AuthorizationDeniedException(
                     "You do not have permission to perform this operation"
             );
         }
+        log.info("Event successfully deleted");
 
         event.setStatus(EventStatus.CANCELLED);
         eventRepository.save(event);
@@ -104,6 +114,8 @@ public class EventService {
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Not found event by id=%s".formatted(id)
                 ));
+        log.info("Found event by id={}", foundEvent);
+
         return entityConverter.toDomain(foundEvent);
     }
 
@@ -115,6 +127,8 @@ public class EventService {
         entityToUpdate.setId(id);
 
         var updatedEvent = eventRepository.save(entityToUpdate);
+        log.info("Updated event with id={}", updatedEvent);
+
         return entityConverter.toDomain(updatedEvent);
     }
 
@@ -133,6 +147,7 @@ public class EventService {
                         eventsSearchFilter.locationId() : null,
                 eventsSearchFilter.eventStatus()
         );
+        log.info("Found {} events", entityList.size());
 
         return entityList.stream()
                 .map(entityConverter::toDomain)
@@ -142,6 +157,7 @@ public class EventService {
     public List<Events> getUserEvents() {
         Long currentUserId = getCurrentUserId();
         List<EventsEntity> entities = eventRepository.findByOwnerId(currentUserId);
+        log.info("Found events user. UserId={}", currentUserId);
 
         return entities.stream()
                        .map(entityConverter::toDomain)

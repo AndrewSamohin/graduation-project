@@ -38,6 +38,7 @@ public class RegistrationService {
         this.eventsDtoConverter = eventsDtoConverter;
     }
 
+    @Transactional
     public RegistrationEntity registrationForEvent(Long eventId, Long userId) {
         EventsEntity event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new IllegalArgumentException("Event not found"));

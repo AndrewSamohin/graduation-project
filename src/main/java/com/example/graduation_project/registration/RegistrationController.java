@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/events")
+@RequestMapping("/events/registrations")
 @Tag(name = "Events")
 public class RegistrationController {
 
@@ -38,7 +38,7 @@ public class RegistrationController {
         this.registrationEntityMapper = registrationEntityMapper;
     }
 
-    @PostMapping("/registrations/{eventId}")
+    @PostMapping("/{eventId}")
     @Operation(summary = "Регистрация пользователя на мероприятие по ID")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<RegistrationDto> registrationForEvent(
@@ -60,7 +60,7 @@ public class RegistrationController {
                 .body(registrationDto);
     }
 
-    @DeleteMapping("/registration/cancel/{eventId}")
+    @DeleteMapping("/cancel/{eventId}")
     @Operation(summary = "Отмена регистрации на мероприятие")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<Void> cancellationOfRegistrationForEvent(
@@ -77,7 +77,7 @@ public class RegistrationController {
                 .build();
     }
 
-    @GetMapping("/registrations/my")
+    @GetMapping("/my")
     @Operation(summary = "Получение мероприятий, на которые зарегистрирован текущий пользователь")
     @SecurityRequirement(name = "bearerAuth")
     public List<EventsDto> getActivities() {

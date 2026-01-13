@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @Tag(name = "Events")
+@RequestMapping("/events")
 public class EventController {
 
     private static final Logger log = LoggerFactory.getLogger(EventController.class);
@@ -31,7 +32,7 @@ public class EventController {
         this.dtoConverter = eventsDtoConverter;
     }
 
-    @PostMapping("/events")
+    @PostMapping
     @Operation(summary = "Создание нового мероприятия")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<EventsDto> createEvent(
@@ -48,21 +49,18 @@ public class EventController {
                 .body(dtoConverter.toDto(createEvent));
     }
 
-    @DeleteMapping("/events/{id}")
+    @DeleteMapping("/{id}")
     @Operation(summary = "Удаление мероприятия")
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<Void> deleteEvent(
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteEvent(
             @PathVariable("id") Long id
     ) {
         log.info("Get request for delete event: id={}", id);
         eventService.deleteEvent(id);
-
-        return ResponseEntity
-                .status(HttpStatus.NO_CONTENT)
-                .build();
     }
 
-    @GetMapping("/events/{id}")
+    @GetMapping("/{id}")
     @Operation(summary = "Получение мероприятия по ID")
     @SecurityRequirement(name = "bearerAuth")
     public EventsDto getEventById(
@@ -73,7 +71,7 @@ public class EventController {
         return dtoConverter.toDto(foundEvent);
     }
 
-    @PutMapping("/events/{id}")
+    @PutMapping("/{id}")
     @Operation(summary = "Обновление мероприятия")
     @SecurityRequirement(name = "bearerAuth")
     public EventsDto updateEvent(
@@ -90,7 +88,7 @@ public class EventController {
         return dtoConverter.toDto(updatedEvent);
     }
 
-    @PostMapping("/events/search")
+    @PostMapping("/search")
     @Operation(summary = "Поиск мероприятий по фильтру")
     @SecurityRequirement(name = "bearerAuth")
     public List<EventsDto> searchEvents(
@@ -104,7 +102,7 @@ public class EventController {
                          .collect(Collectors.toList());
     }
 
-    @GetMapping("/events/my")
+    @GetMapping("/my")
     @Operation(summary = "Получение всех мероприятий, созданных текущим пользователем")
     @SecurityRequirement(name = "bearerAuth")
     public List<EventsDto> getMyEvents() {
