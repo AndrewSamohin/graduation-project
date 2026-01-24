@@ -1,12 +1,19 @@
 package com.example.graduation_project.events;
 
+import com.example.graduation_project.kafka.EventChangeMessage;
+import com.example.graduation_project.kafka.FieldChange;
 import com.example.graduation_project.locations.LocationEntity;
 import com.example.graduation_project.locations.LocationRepository;
+import com.example.graduation_project.locations.LocationService;
+import com.example.graduation_project.registration.RegistrationRepository;
 import com.example.graduation_project.users.User;
 import com.example.graduation_project.users.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.KafkaException;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -14,7 +21,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.lang.reflect.Field;
+import java.util.*;
+import java.util.function.Consumer;
 
 @Service
 public class EventService {
@@ -27,18 +36,28 @@ public class EventService {
 
     private final LocationRepository locationRepository;
 
-    private final UserService userService;
+    private final LocationService locationService;
+
+    private final RegistrationRepository registrationRepository;
+    private final KafkaTemplate<String, EventChangeMessage> kafkaTemplate;
+
+    @Value("${spring.kafka.template.default-topic}")
+    private String eventChangeTopic;
 
     public EventService(
             EventRepository eventRepository,
             EventsEntityConverter entityConverter,
             LocationRepository locationRepository,
-            UserService userService
+            LocationService locationService,
+            RegistrationRepository registrationRepository,
+            KafkaTemplate<String, EventChangeMessage> kafkaTemplate
     ) {
         this.eventRepository = eventRepository;
         this.entityConverter = entityConverter;
         this.locationRepository = locationRepository;
-        this.userService = userService;
+        this.locationService = locationService;
+        this.registrationRepository = registrationRepository;
+        this.kafkaTemplate = kafkaTemplate;
     }
 
     public Events createEvent(Events eventsToCreate) {
@@ -119,17 +138,89 @@ public class EventService {
         return entityConverter.toDomain(foundEvent);
     }
 
+    @Transactional
     public Events updateEvent(Long id, Events eventsToUpdate) {
-        if (!eventRepository.existsById(id)) {
-            throw new EntityNotFoundException("No found event by id=%s".formatted(id));
+        EventsEntity entity = eventRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("No found event by id=" + id));
+
+        Long currentUserId = getCurrentUserId();
+        boolean isAdmin = isAdmin();
+        if (!isAdmin && !entity.getOwnerId().equals(currentUserId)) {
+            throw new AuthorizationDeniedException("You do not have permission to update this event");
         }
-        var entityToUpdate = entityConverter.toEntity(eventsToUpdate);
-        entityToUpdate.setId(id);
 
-        var updatedEvent = eventRepository.save(entityToUpdate);
-        log.info("Updated event with id={}", updatedEvent);
+        Map<String, FieldChange> changedFields =
+                applyUpdatesChanges(entity, eventsToUpdate);
 
-        return entityConverter.toDomain(updatedEvent);
+        eventRepository.save(entity);
+        log.info("Updated event with id={}", entity.getId());
+
+        if (!changedFields.isEmpty()) {
+            List<Long> subscriberIds = registrationRepository.findAllByEventId(id)
+                    .stream()
+                    .map(sub -> sub.getUser().getId())
+                    .toList();
+
+            EventChangeMessage message = new EventChangeMessage(
+                    id,
+                    currentUserId,
+                    entity.getOwnerId(),
+                    changedFields,
+                    subscriberIds
+            );
+            log.info("Sending Kafka message to topic '{}': {}", eventChangeTopic, message);
+
+            try {
+                kafkaTemplate.send(eventChangeTopic, message);
+                log.info("Sent event change message to Kafka: eventId={}, changerId={}", id, currentUserId);
+            } catch (KafkaException e) {
+                log.error("Failed to send Kafka message for eventId={}", id, e);
+            }
+        } else {
+            log.info("No fields changed for eventId={} skipping Kafka send", id);
+        }
+
+        return entityConverter.toDomain(entity);
+    }
+
+    private Map<String, FieldChange> applyUpdatesChanges(
+            EventsEntity entity,
+            Events dto
+    ) {
+        Map<String, FieldChange> changes = new HashMap<>();
+
+        update(changes, "name",
+                entity.getName(), dto.name(), entity::setName);
+
+        update(changes, "maxPlaces",
+                entity.getMaxPlaces(), dto.maxPlaces(), entity::setMaxPlaces);
+
+        update(changes, "date",
+                entity.getDate(), dto.date(), entity::setDate);
+
+        update(changes, "cost",
+                entity.getCost(), dto.cost(), entity::setCost);
+
+        update(changes, "duration",
+                entity.getDuration(), dto.duration(), entity::setDuration);
+
+        update(changes, "locationId",
+                entity.getLocationId(), dto.locationId(), entity::setLocationId);
+
+        return changes;
+    }
+
+    private <T> void update(
+            Map<String, FieldChange> changes,
+            String field,
+            T oldValue,
+            T newValue,
+            Consumer<T> setter
+    ) {
+        if(!Objects.equals(oldValue, newValue)){
+            changes.put(field, new FieldChange(oldValue, newValue));
+            setter.accept(newValue);
+        }
     }
 
     public List<Events> searchAllEvents(EventsSearchFilter eventsSearchFilter) {

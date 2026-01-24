@@ -1,6 +1,7 @@
 package com.example.graduation_project.web;
 
 import jakarta.persistence.EntityNotFoundException;
+import org.apache.kafka.common.KafkaException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -110,6 +111,21 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
+                .body(messageResponse);
+    }
+
+    @ExceptionHandler(KafkaException.class)
+    private final ResponseEntity<ErrorMessageResponse> handleKafkaException(
+            KafkaException e
+    ) {
+        log.error("Handle Kafka exception", e);
+        ErrorMessageResponse messageResponse = new ErrorMessageResponse(
+                "Error sending notification",
+                e.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(messageResponse);
     }
 }
