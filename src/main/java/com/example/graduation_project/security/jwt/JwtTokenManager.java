@@ -23,10 +23,12 @@ public class JwtTokenManager {
         this.expirationTime = expirationTime;
     }
 
-    public String generateToken(String login) {
+    public String generateToken(String login, String role, Long userId) {
         return Jwts
                 .builder()
                 .subject(login)
+                .claim("role", role)
+                .claim("userId", userId)
                 .signWith(key)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expirationTime))
